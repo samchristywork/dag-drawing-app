@@ -37,3 +37,27 @@ struct AppData {
   GtkWidget *drawing_area;
   Shape *selected_shape{nullptr};
 } model;
+
+gboolean on_scroll_event(GtkWidget *widget, GdkEventScroll *event,
+                         gpointer user_data) {
+  auto &app_data = *static_cast<AppData *>(user_data);
+  double zoom_step = 0.1;
+
+  double before_zoom_x = (event->x - app_data.pan.x) / app_data.zoom;
+  double before_zoom_y = (event->y - app_data.pan.y) / app_data.zoom;
+
+  if (event->direction == GDK_SCROLL_UP) {
+    app_data.zoom *= 1.0 + zoom_step;
+  } else if (event->direction == GDK_SCROLL_DOWN) {
+    app_data.zoom *= 1.0 - zoom_step;
+  }
+
+  double after_zoom_x = (event->x - app_data.pan.x) / app_data.zoom;
+  double after_zoom_y = (event->y - app_data.pan.y) / app_data.zoom;
+
+  app_data.pan.x += (after_zoom_x - before_zoom_x) * app_data.zoom;
+  app_data.pan.y += (after_zoom_y - before_zoom_y) * app_data.zoom;
+
+  gtk_widget_queue_draw(app_data.drawing_area);
+  return TRUE;
+}
